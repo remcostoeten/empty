@@ -1,16 +1,18 @@
 "use client";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { getClientFingerprint } from "./fingerprint";
 import { EventBatcher } from "./transport";
-import { AnalyticsConfig, AnalyticsEvent, NavigationType } from "./types";
+import {
+  AnalyticsConfig,
+  AnalyticsEvent,
+  BatcherOptions,
+  NavigationType,
+} from "./types";
 import { getVisitId } from "./visit";
 
 interface AnalyticsProps extends AnalyticsConfig {
   fingerprint?: string;
-  batching?: {
-    flushInterval?: number;
-    maxBatchSize?: number;
-  };
+  batching?: BatcherOptions;
 }
 
 function getScreenBucket(): string | undefined {
@@ -59,9 +61,11 @@ export function Analytics(props: AnalyticsProps) {
   );
 
   const batcher = useMemo(() => new EventBatcher(props, props.batching), [props]);
+  const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+    lastPathRef.current = pathname;
     batcher.push(buildEvent(pathname, visitId, "initial", fingerprint));
 
     const handleVisibility = () => {
@@ -70,17 +74,23 @@ export function Analytics(props: AnalyticsProps) {
       batcher.flush();
     };
 
-    const handlePopState = () => {
+    const handleNavigation = () => {
       const newPath = typeof window !== "undefined" ? window.location.pathname : "/";
+      if (lastPathRef.current === newPath) return;
+      lastPathRef.current = newPath;
       batcher.push(buildEvent(newPath, visitId, "route_change", fingerprint));
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
-    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", handleNavigation);
+    window.addEventListener("hashchange", handleNavigation);
+    window.addEventListener("pagehide", handleVisibility);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("popstate", handleNavigation);
+      window.removeEventListener("hashchange", handleNavigation);
+      window.removeEventListener("pagehide", handleVisibility);
       batcher.stop();
     };
   }, [batcher, fingerprint, visitId]);

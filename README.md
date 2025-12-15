@@ -80,9 +80,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
 - No cookies or persistent identifiers are used.
 - A short-lived `__analytics_visit_id` in `localStorage` deduplicates navigations.
-- Fingerprints are opaque and project-scoped; hash inputs should be generated server-side to avoid exposing IPs. The client accepts an injected fingerprint or falls back to a transient, non-reversible token.
+- Fingerprints are opaque and project-scoped. Generate them server-side so IPs are hashed immediately and never reach the bundle. The client accepts an injected fingerprint or falls back to a transient, non-reversible token.
 - Collected client fields: pathname, referrer, language, timezone, screen bucket, navigation type, visit id.
 - Geo enrichment is server-side only (platform headers or coarse IP lookup) and never stores raw IPs.
+
+### Server-side fingerprinting and geo helpers
+
+- Use `deriveFingerprint` to hash platform headers with a rotating window and project-scoped secret, then pass the value to `<Analytics fingerprint={...} />`.
+- Use `extractGeo` to map common platform headers into coarse `country/region/city` values for local writes or ingestion enrichment.
+
+```tsx
+import { headers } from "next/headers";
+import { deriveFingerprint, extractGeo } from "@selfhosted/analytics-adapters";
+import { Analytics } from "@selfhosted/analytics-core";
+
+const fingerprint = deriveFingerprint({
+  headers: headers(),
+  projectId: "my-app",
+  secret: process.env.ANALYTICS_FINGERPRINT_SECRET!,
+});
+
+const geo = extractGeo(headers());
+
+return (
+  <Analytics
+    mode="hybrid"
+    fingerprint={fingerprint}
+    local={{ action: persistAnalytics }}
+    remote={{ endpoint: "https://analytics.example.com/ingest", projectId: "my-app" }}
+    batching={{ maxAttempts: 3, retryDelayMs: 1000 }}
+  />
+);
+```
 
 ## Storage modes
 
@@ -90,9 +119,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 - **Local**: Invokes a provided Server Action (Drizzle-powered) inside the host project.
 - **Hybrid**: Executes both local and remote flows, enabling local ownership with centralized aggregation.
 
+The client batcher retries failed deliveries with configurable backoff and flushes on `visibilitychange`/`pagehide` to reduce drop rates when tabs close.【F:packages/analytics-core/src/transport.ts†L1-L92】【F:packages/analytics-core/src/Analytics.tsx†L38-L82】
+
 ## Ingestion service
 
-The example service in `apps/analytics-service` uses SQLite via Drizzle. It validates payloads, scopes data per `projectId`, and can be deployed as a standalone collector behind any platform that forwards standard geo headers.
+The example service in `apps/analytics-service` uses SQLite via Drizzle. It validates payloads, scopes data per `projectId`, enriches geo from platform headers, and will synthesize a fingerprint server-side when the client did not provide one (using `ANALYTICS_FINGERPRINT_SECRET`). It can be deployed as a standalone collector behind any platform that forwards standard geo headers.【F:apps/analytics-service/src/server.ts†L1-L53】
 
 Run locally after installing dependencies:
 
@@ -113,19 +144,19 @@ npm run --workspace apps/analytics-service start
 
 ### What exists today
 
-- Client-only `<Analytics />` component for Next.js app router that batches page views and navigation events with `sendBeacon`/`fetch` while keeping bundle size minimal.【F:packages/analytics-core/src/Analytics.tsx†L1-L78】【F:packages/analytics-core/src/transport.ts†L1-L75】
+- Client-only `<Analytics />` component for Next.js app router that batches page views and navigation events with `sendBeacon`/`fetch` plus retry/backoff and tab-close flushing.【F:packages/analytics-core/src/Analytics.tsx†L1-L82】【F:packages/analytics-core/src/transport.ts†L1-L92】
 - Privacy-preserving visit grouping via short-lived localStorage keys plus lightweight, project-scoped fingerprints that avoid IP storage on the client.【F:packages/analytics-core/src/visit.ts†L1-L25】【F:packages/analytics-core/src/fingerprint.ts†L1-L33】
-- Configurable delivery modes: remote ingestion, direct local writes via server actions, or hybrid for dual writes.【F:packages/analytics-core/src/types.ts†L1-L34】【F:packages/analytics-core/src/transport.ts†L41-L72】
-- Drizzle-ready schemas for SQLite/PostgreSQL and helpers to create server actions or remote ingest calls.【F:packages/analytics-adapters/src/schema.ts†L1-L41】【F:packages/analytics-adapters/src/local.ts†L1-L41】【F:packages/analytics-adapters/src/remote.ts†L1-L20】
-- Example Hono-based ingestion service wiring that scopes data per project and can be deployed independently.【F:README.md†L59-L79】
+- Configurable delivery modes: remote ingestion, direct local writes via server actions, or hybrid for dual writes.【F:packages/analytics-core/src/types.ts†L1-L47】【F:packages/analytics-core/src/transport.ts†L41-L72】
+- Drizzle-ready schemas for SQLite/PostgreSQL with recommended indexes, and helpers to create server actions or remote ingest calls.【F:packages/analytics-adapters/src/schema.ts†L1-L70】【F:packages/analytics-adapters/src/local.ts†L1-L41】【F:packages/analytics-adapters/src/remote.ts†L1-L20】
+- Server-side helpers for rotating fingerprints and geo extraction to keep PII out of the client bundle or database.【F:packages/analytics-adapters/src/fingerprint.ts†L1-L52】【F:packages/analytics-adapters/src/geo.ts†L1-L37】
+- Example Hono-based ingestion service wiring that scopes data per project, enriches geo, and can synthesize fingerprints server-side.【F:apps/analytics-service/src/server.ts†L1-L53】
 
 ### Near-term additions we could ship
 
-- Server-side fingerprint helper that hashes platform headers and rotates secrets, so apps don’t rely on the client fallback.
 - Navigation event enrichment (first/returning visit markers, navigation performance buckets) while keeping payloads anonymous.
-- Retry/backoff strategy for remote delivery plus in-memory queue draining on `visibilitychange` for better reliability.
-- Schema migrations and indexes (per-project + timestamp) to improve aggregation performance for both SQLite and Postgres.
-- Optional geo enrichment helpers that map common platform headers to coarse country/region fields for local writes.
+- Aggregates and rollups (unique visitors, page counters) plus migrations for both SQLite and Postgres.
+- Observability hooks and optional logging for dropped batches and ingestion errors.
+- Benchmarks and size budgets to keep the client bundle lean with retries enabled.
 
 ### Expected end-state (vision)
 

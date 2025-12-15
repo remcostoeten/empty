@@ -42,4 +42,16 @@ export type NavigationType = "initial" | "route_change" | "visibility_flush";
 export interface BatcherOptions {
   flushInterval?: number;
   maxBatchSize?: number;
+  /**
+   * Maximum attempts to deliver a batch before dropping it. Defaults to 2 (1 retry).
+   */
+  maxAttempts?: number;
+  /**
+   * Base delay in milliseconds between retries. Defaults to 750ms.
+   */
+  retryDelayMs?: number;
+  /**
+   * Optional observer for delivery failures. Useful for host logging/telemetry.
+   */
+  onDeliveryError?: (error: unknown, events: AnalyticsEvent[]) => void;
 }

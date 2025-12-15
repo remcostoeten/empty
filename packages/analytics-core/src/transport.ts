@@ -9,6 +9,9 @@ export class EventBatcher {
   private queue: PendingQueue = { timer: null, events: [] };
   private readonly flushInterval: number;
   private readonly maxBatchSize: number;
+  private readonly maxAttempts: number;
+  private readonly retryDelayMs: number;
+  private readonly onDeliveryError?: (error: unknown, events: AnalyticsEvent[]) => void;
 
   constructor(
     private readonly config: AnalyticsConfig,
@@ -16,6 +19,9 @@ export class EventBatcher {
   ) {
     this.flushInterval = options?.flushInterval ?? 5000;
     this.maxBatchSize = options?.maxBatchSize ?? 20;
+    this.maxAttempts = Math.max(1, options?.maxAttempts ?? 2);
+    this.retryDelayMs = options?.retryDelayMs ?? 750;
+    this.onDeliveryError = options?.onDeliveryError;
     if (typeof window !== "undefined") {
       this.start();
     }
@@ -34,12 +40,34 @@ export class EventBatcher {
     this.queue.events = [];
 
     try {
-      await sendPayload(this.config, payload);
+      await this.sendWithRetry(payload);
     } catch (error) {
+      if (this.onDeliveryError) {
+        this.onDeliveryError(error, payload);
+      }
       console.error("Failed to deliver analytics batch", error);
       // best effort only; events are dropped on failure by design
     }
   };
+
+  private async sendWithRetry(events: AnalyticsEvent[]) {
+    let attempt = 0;
+    let lastError: unknown;
+
+    while (attempt < this.maxAttempts) {
+      try {
+        await sendPayload(this.config, events);
+        return;
+      } catch (error) {
+        lastError = error;
+        attempt += 1;
+        if (attempt >= this.maxAttempts) break;
+        await delay(this.retryDelayMs * attempt);
+      }
+    }
+
+    throw lastError ?? new Error("Unknown analytics delivery failure");
+  }
 
   private start() {
     if (this.queue.timer) return;
@@ -69,8 +97,15 @@ async function sendPayload(config: AnalyticsConfig, events: AnalyticsEvent[]) {
   ]);
 }
 
-async function postRemote(destination: { endpoint: string; projectId: string }, events: AnalyticsEvent[]) {
-  const body = JSON.stringify({ projectId: destination.projectId, events });
+async function postRemote(
+  destination: { endpoint: string; projectId: string; environment?: string },
+  events: AnalyticsEvent[]
+) {
+  const body = JSON.stringify({
+    projectId: destination.projectId,
+    environment: destination.environment,
+    events,
+  });
 
   if (typeof navigator !== "undefined" && navigator.sendBeacon) {
     const blob = new Blob([body], { type: "application/json" });
@@ -84,4 +119,8 @@ async function postRemote(destination: { endpoint: string; projectId: string }, 
     headers: { "Content-Type": "application/json" },
     keepalive: true,
   });
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

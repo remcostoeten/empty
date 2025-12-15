@@ -2,6 +2,7 @@ export type {
   AnalyticsConfig,
   AnalyticsEvent,
   AnalyticsMode,
+  BatcherOptions,
   RemoteDestination,
   LocalDestination,
   HybridDestination,
