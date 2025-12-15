@@ -76,6 +76,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 />
 ```
 
+### Example Next.js app (local storage)
+
+The `apps/analytics-demo` project is a minimal App Router sample with the analytics packages wired in **local** mode. It uses a
+Server Action to write page views into `data/analytics.db` via Drizzle and the packaged SQLite schema.
+
+```bash
+# from repo root
+npm install
+npm run dev --workspace analytics-demo
+
+# navigate to http://localhost:3000 and click through the routes
+# inspect the captured events
+sqlite3 apps/analytics-demo/data/analytics.db 'select project_id, pathname, created_at from page_views limit 5;'
+```
+
+Key pieces inside the demo app:
+
+- Fingerprints are derived server-side from request headers and a project secret, then handed to the client collector to keep
+  IP hashes off the client bundle.【F:apps/analytics-demo/src/app/layout.tsx†L1-L46】
+- `<Analytics />` runs on the client with `mode="local"`, batching events and invoking the Server Action that writes into
+  SQLite.【F:apps/analytics-demo/src/components/ClientAnalytics.tsx†L1-L19】【F:apps/analytics-demo/src/app/actions/persist-analytics.ts†L1-L16】
+- The Drizzle client points at a workspace-local SQLite file using the shared `pageViews` schema.【F:apps/analytics-demo/src/db/client.ts†L1-L8】
+
 ## Privacy model
 
 - No cookies or persistent identifiers are used.

@@ -1,0 +1,30 @@
+:root {
+  color-scheme: dark;
+}
+
+a {
+  text-decoration: none;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "SF Pro", "Inter", sans-serif;
+}
+
+p {
+  margin: 0;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+section.card {
+  border: 1px solid rgb(30 41 59);
+  background: rgb(15 23 42);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
