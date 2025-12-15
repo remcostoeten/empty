@@ -108,7 +108,7 @@ Key pieces inside the demo app:
 - `<Analytics />` runs on the client with `mode="local"`, batching events and invoking the Server Action that writes into
   SQLite.【F:apps/analytics-demo/src/components/ClientAnalytics.tsx†L1-L19】【F:apps/analytics-demo/src/app/actions/persist-analytics.ts†L1-L16】
 - The Drizzle client points at a workspace-local SQLite file using the shared `pageViews` schema.【F:apps/analytics-demo/src/db/client.ts†L1-L8】
-- The demo includes two visually distinct pages inspired by Vercel analytics (an overview dashboard and a members list) so you can click around and see local page-view writes while previewing UI styles.【F:apps/analytics-demo/src/app/page.tsx†L1-L69】【F:apps/analytics-demo/src/app/analytics/page.tsx†L1-L119】【F:apps/analytics-demo/src/app/members/page.tsx†L1-L48】
+- The demo includes two visually distinct pages inspired by Vercel analytics (an overview dashboard and a members list) so you can click around and see local page-view writes while previewing UI styles. Geo is derived server-side and rendered on the analytics page; when running on localhost without platform geo headers, locations will appear as "Unknown" until deployed behind a provider that forwards geo info.【F:apps/analytics-demo/src/app/page.tsx†L1-L69】【F:apps/analytics-demo/src/app/analytics/page.tsx†L1-L119】【F:apps/analytics-demo/src/app/members/page.tsx†L1-L48】
 
 ## Privacy model
 

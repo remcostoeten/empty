@@ -1,69 +1,79 @@
-const metricCards = [
-  { label: "Visitors", value: "5", delta: "-62%", sub: "vs last 7 days" },
-  { label: "Page Views", value: "5", delta: "-62%", sub: "vs last 7 days" },
-  { label: "Bounce Rate", value: "100%", delta: "+7%", sub: "vs last 7 days" },
-  { label: "Realtime", value: "2", delta: "Up to date", sub: "live sessions" },
-];
+import { db, pageViewsTable } from "@/db/client";
+import { desc } from "drizzle-orm";
 
-const traffic = [
-  { range: "Last 24 Hours", selected: false },
-  { range: "Last 7 Days", selected: true },
-  { range: "Last 30 Days", selected: false },
-  { range: "Last 3 Months", selected: false },
-  { range: "Last 6 Months", selected: false },
-];
-
-const pages = [
-  { page: "/", visitors: "5" },
-  { page: "/product", visitors: "1" },
-];
-
-const geos = [
-  { country: "Netherlands", value: "80%" },
-  { country: "United States of America", value: "20%" },
-];
-
-const devices = [
-  { label: "Desktop", value: "100%" },
-];
-
-const systems = [
-  { label: "macOS", value: "100%" },
-];
-
-const chartPoints = [
-  { x: 0, y: 20 },
-  { x: 1, y: 60 },
-  { x: 2, y: 20 },
-  { x: 3, y: 100 },
-];
-
-export default function AnalyticsPage() {
+function asChart(points: number[]) {
   const width = 340;
   const height = 160;
-  const spacing = width / (chartPoints.length - 1);
+  const spacing = width / Math.max(points.length - 1, 1);
   const baseline = height - 10;
-  const pathData = chartPoints
-    .map((point, idx) => `${idx === 0 ? "M" : "L"}${idx * spacing} ${baseline - point.y}`)
+  const pathData = points
+    .map((y, idx) => `${idx === 0 ? "M" : "L"}${idx * spacing} ${baseline - y}`)
     .join(" ");
   const areaPath = `${pathData} L ${width} ${baseline} L 0 ${baseline} Z`;
+  return { width, height, pathData, areaPath, baseline };
+}
+
+export default async function AnalyticsPage() {
+  const events = await db
+    .select()
+    .from(pageViewsTable)
+    .orderBy(desc(pageViewsTable.createdAt))
+    .limit(120);
+
+  const totalViews = events.length;
+  const uniqueVisits = new Set(events.map((e) => e.visitId)).size;
+  const paths = new Map<string, number>();
+  const geos = new Map<string, number>();
+
+  events.forEach((event) => {
+    paths.set(event.pathname, (paths.get(event.pathname) ?? 0) + 1);
+    const key = event.country ?? "Unknown";
+    geos.set(key, (geos.get(key) ?? 0) + 1);
+  });
+
+  const pageList = Array.from(paths.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+
+  const geoList = Array.from(geos.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+
+  const hourlyBuckets = Array.from({ length: 8 }, (_, idx) => {
+    const cutoff = Date.now() - idx * 60 * 60 * 1000;
+    const next = cutoff - 60 * 60 * 1000;
+    return events.filter(
+      (e) => e.createdAt.getTime() <= cutoff && e.createdAt.getTime() > next
+    ).length;
+  }).reverse();
+
+  const { width, height, pathData, areaPath } = asChart(
+    hourlyBuckets.length ? hourlyBuckets : [0, 0]
+  );
+
+  const metricCards = [
+    { label: "Visitors", value: uniqueVisits || "–", delta: "live sample" },
+    { label: "Page Views", value: totalViews || "–", delta: "last 120" },
+    { label: "Bounce Rate", value: "demo", delta: "placeholder" },
+    { label: "Realtime", value: Math.max(uniqueVisits, 1), delta: "sample" },
+  ];
 
   return (
     <div className="analytics-grid">
       <div className="analytics-head">
         <div>
-          <div className="pill live">analytics @ {"{}"}</div>
+          <div className="pill live">analytics @ {{}}</div>
           <div className="panel-title" style={{ marginTop: 8 }}>Web Analytics</div>
-          <p className="panel-subtitle">Styled after the Vercel Analytics console with live-ish sample data.</p>
+          <p className="panel-subtitle">
+            Styled after the Vercel Analytics console; data is live from your local
+            SQLite insertions. Geo stays server-side and will be unknown on
+            localhost without platform headers.
+          </p>
         </div>
         <div className="toolbar">
           <span className="env">Production</span>
           <div className="range-menu">
-            {traffic.map((item) => (
-              <span key={item.range} className={item.selected ? "menu-item selected" : "menu-item"}>
-                {item.range}
-              </span>
-            ))}
+            <span className="menu-item selected">Last 120 events</span>
           </div>
         </div>
       </div>
@@ -73,8 +83,10 @@ export default function AnalyticsPage() {
           <div key={metric.label} className="panel metric-card">
             <div className="metric-label subtle">{metric.label}</div>
             <div className="metric-value">{metric.value}</div>
-            <div className={`delta ${metric.delta.includes("-") ? "down" : ""}`}>{metric.delta}</div>
-            <div className="panel-subtitle" style={{ marginTop: 4 }}>{metric.sub}</div>
+            <div className="delta">{metric.delta}</div>
+            <div className="panel-subtitle" style={{ marginTop: 4 }}>
+              updated from stored events
+            </div>
           </div>
         ))}
       </div>
@@ -83,7 +95,9 @@ export default function AnalyticsPage() {
         <div className="chart-head">
           <div>
             <div className="panel-title">Page views</div>
-            <p className="panel-subtitle">Total and uniques · synthetic demo values</p>
+            <p className="panel-subtitle">
+              Last 8 hours of captured events (server-rendered from SQLite)
+            </p>
           </div>
           <div className="legend">
             <span className="legend-dot" /> Visitors · Page views
@@ -106,12 +120,20 @@ export default function AnalyticsPage() {
           <div className="panel-title">Pages</div>
           <table className="table dense">
             <tbody>
-              {pages.map((row) => (
-                <tr key={row.page}>
-                  <td>{row.page}</td>
-                  <td>{row.visitors}</td>
+              {pageList.length ? (
+                pageList.map(([page, count]) => (
+                  <tr key={page}>
+                    <td>{page}</td>
+                    <td>{count}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={2} className="subtle">
+                    No events yet. Click around the demo to generate page views.
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -119,12 +141,22 @@ export default function AnalyticsPage() {
           <div className="panel-title">Locations</div>
           <table className="table dense">
             <tbody>
-              {geos.map((row) => (
-                <tr key={row.country}>
-                  <td>{row.country}</td>
-                  <td>{row.value}</td>
+              {geoList.length ? (
+                geoList.map(([country, count]) => (
+                  <tr key={country}>
+                    <td>{country === "Unknown" ? "Unknown / localhost" : country}</td>
+                    <td>{count}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={2} className="subtle">
+                    Geo is derived server-side. Localhost generally lacks geo headers,
+                    so values may stay "Unknown" until deployed behind a platform that
+                    forwards location headers.
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -132,12 +164,10 @@ export default function AnalyticsPage() {
           <div className="panel-title">Devices</div>
           <table className="table dense">
             <tbody>
-              {devices.map((row) => (
-                <tr key={row.label}>
-                  <td>{row.label}</td>
-                  <td>{row.value}</td>
-                </tr>
-              ))}
+              <tr>
+                <td>Desktop</td>
+                <td>demo</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -145,12 +175,10 @@ export default function AnalyticsPage() {
           <div className="panel-title">Operating systems</div>
           <table className="table dense">
             <tbody>
-              {systems.map((row) => (
-                <tr key={row.label}>
-                  <td>{row.label}</td>
-                  <td>{row.value}</td>
-                </tr>
-              ))}
+              <tr>
+                <td>macOS</td>
+                <td>demo</td>
+              </tr>
             </tbody>
           </table>
         </div>
