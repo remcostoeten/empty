@@ -10,6 +10,16 @@ This repository contains a reusable, privacy-first analytics stack inspired by `
 
 ## Quickstart
 
+### What’s in this branch
+- **Analytics libraries** (`packages/analytics-core`, `packages/analytics-adapters`) with the client `<Analytics />` component, fingerprint/geo helpers, batching transport, and Drizzle-ready schemas.
+- **Central ingestion service** (`apps/analytics-service`) that accepts batched events, enriches geo, and can derive fingerprints server-side.
+- **Demo Next.js app** (`apps/analytics-demo`) wired to the libraries in **local** mode to showcase how analytics are collected and written to a SQLite database.
+
+### What you need to provide
+- A database connection for the mode you choose: SQLite/Turso/Neon/etc. for local writes, or Postgres/SQLite for the ingestion service. The demo already points to a workspace-local SQLite file.
+- Run the packaged Drizzle schema (`pageViews`) in your target database; the demo and service both import it for migrations/inserts.
+- Optional free geo API tokens (e.g., ipinfo) if your hosting platform does not supply geo headers and you want IP-based coarse geo enrichment.
+
 Install the packages from a registry or via workspace linking:
 
 ```bash
