@@ -18,20 +18,21 @@ const tiles = [
 
 export default function ProductPage() {
   return (
-    <div className="flex flex-col gap-4">
-      <section className="card">
-        <h1 className="text-2xl font-semibold text-white">Storage modes</h1>
-        <p className="mt-2 text-slate-300">
+    <div className="app-main">
+      <section className="panel">
+        <div className="panel-title">Storage modes</div>
+        <p className="panel-subtitle" style={{ marginTop: 6 }}>
           Swap between remote, local, or hybrid delivery by changing the <code>mode</code> prop passed to
-          <code>&lt;Analytics /&gt;</code>. This demo app runs in <span className="text-white">local</span> mode so
-          you can inspect the SQLite file directly.
+          <code>&lt;Analytics /&gt;</code>. This demo app runs in <strong>local</strong> mode so you can inspect the SQLite file directly.
         </p>
       </section>
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="list-stack">
         {tiles.map((tile) => (
-          <div key={tile.title} className="card">
-            <div className="text-lg font-semibold text-white">{tile.title}</div>
-            <p className="mt-1 text-slate-300">{tile.body}</p>
+          <div key={tile.title} className="list-card">
+            <div className="panel-title">{tile.title}</div>
+            <p className="subtle" style={{ marginTop: 6 }}>
+              {tile.body}
+            </p>
           </div>
         ))}
       </section>

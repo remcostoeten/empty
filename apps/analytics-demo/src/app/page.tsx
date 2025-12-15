@@ -1,38 +1,87 @@
 import Link from "next/link";
 
+const highlights = [
+  "Edge + Node friendly client with beacon/fetch fallback",
+  "Server Actions own persistence; no API routes required",
+  "Coarse geo and rotated fingerprints stay off the client bundle",
+];
+
 export default function HomePage() {
   return (
-    <div className="flex flex-col gap-4">
-      <section className="card">
-        <h1 className="text-2xl font-semibold text-white">Self-hosted analytics demo</h1>
-        <p className="mt-2 text-slate-300">
-          This Next.js app is wired to the <code>@selfhosted/analytics</code> MVP. Navigate the
-          routes below and page views will be written straight into the local SQLite database via a
-          Server Action.
-        </p>
+    <div className="app-main">
+      <section className="panel hero">
+        <div>
+          <p className="pill-muted">MVP → production hardening</p>
+          <h1 className="panel-title" style={{ marginTop: 10 }}>
+            Self-hosted analytics with Vercel-like polish
+          </h1>
+          <p className="panel-subtitle" style={{ marginTop: 8 }}>
+            Navigate the demo routes to see local page-view writes land in SQLite via Server Actions.
+            The client is lightweight, anonymous, and ships batched events via beacon/fetch.
+          </p>
+          <div className="cta-row">
+            <Link className="cta" href="/analytics">
+              Explore dashboard
+            </Link>
+            <Link className="cta-secondary" href="/product">
+              View storage modes
+            </Link>
+          </div>
+        </div>
+        <div className="panel chart-card" style={{ padding: 16 }}>
+          <div className="panel-title">What’s wired up</div>
+          <ul className="subtle" style={{ marginTop: 10, paddingLeft: 18, lineHeight: 1.6 }}>
+            {highlights.map((item) => (
+              <li key={item} style={{ marginBottom: 6 }}>
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div className="pill" style={{ marginTop: 14 }}>Local mode · SQLite + Drizzle</div>
+          <p className="subtle" style={{ marginTop: 8 }}>
+            Fingerprints are injected from the server (hashed headers + project secret) and geo is
+            derived server-side.
+          </p>
+        </div>
       </section>
-      <section className="card">
-        <h2 className="text-xl font-semibold text-white">Try it out</h2>
-        <ol className="mt-3 list-decimal space-y-2 pl-6 text-slate-300">
+
+      <section className="list-stack">
+        <Link className="list-card" href="/analytics">
+          <div className="panel-title">Analytics view</div>
+          <p className="subtle" style={{ marginTop: 6 }}>
+            Styled after the Next.js analytics console—hero metrics, sparkline, top pages, and geo.
+          </p>
+        </Link>
+        <Link className="list-card" href="/members">
+          <div className="panel-title">Members page</div>
+          <p className="subtle" style={{ marginTop: 6 }}>
+            A second themed screen with avatars and progress bars for variety.
+          </p>
+        </Link>
+        <Link className="list-card" href="/docs">
+          <div className="panel-title">Instrumentation notes</div>
+          <p className="subtle" style={{ marginTop: 6 }}>
+            Batching, navigation dedupe, and fingerprint/geo guidance for production use.
+          </p>
+        </Link>
+      </section>
+
+      <section className="panel">
+        <div className="panel-title">Quickstart</div>
+        <p className="panel-subtitle" style={{ marginTop: 6 }}>
+          From the repo root, install deps, run the demo, click around, then inspect captured events in SQLite.
+        </p>
+        <ol className="subtle" style={{ marginTop: 10, paddingLeft: 18, lineHeight: 1.6 }}>
           <li>
-            Run <code>npm install</code> from the repo root, then <code>npm run dev --workspace analytics-demo</code>.
+            Install: <code>npm install</code>
           </li>
-          <li>Visit several routes (Home, Product, Docs, About) and refresh.</li>
           <li>
-            Inspect <code>apps/analytics-demo/data/analytics.db</code> to see page views captured by the
-            local Drizzle writer.
+            Start: <code>npm run dev --workspace analytics-demo</code>
+          </li>
+          <li>
+            Inspect: <code>sqlite3 apps/analytics-demo/data/analytics.db 'select pathname, country, created_at from page_views limit 5;'</code>
           </li>
         </ol>
-      </section>
-      <section className="card grid gap-3 sm:grid-cols-2">
-        <Link className="rounded-lg border border-slate-800 p-4 hover:border-slate-600" href="/product">
-          <div className="text-lg font-semibold text-white">Product tour</div>
-          <p className="text-slate-300">Overview of storage modes and when to use them.</p>
-        </Link>
-        <Link className="rounded-lg border border-slate-800 p-4 hover:border-slate-600" href="/docs">
-          <div className="text-lg font-semibold text-white">Docs</div>
-          <p className="text-slate-300">How batching, fingerprints, and geo hints are applied.</p>
-        </Link>
       </section>
     </div>
   );

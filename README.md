@@ -98,6 +98,7 @@ Key pieces inside the demo app:
 - `<Analytics />` runs on the client with `mode="local"`, batching events and invoking the Server Action that writes into
   SQLite.【F:apps/analytics-demo/src/components/ClientAnalytics.tsx†L1-L19】【F:apps/analytics-demo/src/app/actions/persist-analytics.ts†L1-L16】
 - The Drizzle client points at a workspace-local SQLite file using the shared `pageViews` schema.【F:apps/analytics-demo/src/db/client.ts†L1-L8】
+- The demo includes two visually distinct pages inspired by Vercel analytics (an overview dashboard and a members list) so you can click around and see local page-view writes while previewing UI styles.【F:apps/analytics-demo/src/app/page.tsx†L1-L69】【F:apps/analytics-demo/src/app/analytics/page.tsx†L1-L119】【F:apps/analytics-demo/src/app/members/page.tsx†L1-L48】
 
 ## Privacy model
 
@@ -111,6 +112,7 @@ Key pieces inside the demo app:
 
 - Use `deriveFingerprint` to hash platform headers with a rotating window and project-scoped secret, then pass the value to `<Analytics fingerprint={...} />`.
 - Use `extractGeo` to map common platform headers into coarse `country/region/city` values for local writes or ingestion enrichment.
+- Use `createGeoResolver` to round-robin across free IP lookup providers (ipapi, ipinfo, ipwhois) with rotating API keys to avoid rate limits. The resolver uses the IP only for lookup and never stores it.
 
 ```tsx
 import { headers } from "next/headers";
@@ -147,6 +149,12 @@ The client batcher retries failed deliveries with configurable backoff and flush
 ## Ingestion service
 
 The example service in `apps/analytics-service` uses SQLite via Drizzle. It validates payloads, scopes data per `projectId`, enriches geo from platform headers, and will synthesize a fingerprint server-side when the client did not provide one (using `ANALYTICS_FINGERPRINT_SECRET`). It can be deployed as a standalone collector behind any platform that forwards standard geo headers.【F:apps/analytics-service/src/server.ts†L1-L53】
+
+Optional geo lookup and rate-limit smoothing:
+
+- Provide comma-separated `IPINFO_TOKENS` (free tier supported) to rotate through multiple ipinfo tokens.
+- The service also includes ipapi and ipwho.is as keyless fallbacks and rotates through configured providers every few requests (`GEO_ROTATE_EVERY`, default 6).
+- Raw IPs are only used transiently for lookup; the resolver returns coarse geo and discards the address.
 
 Run locally after installing dependencies:
 

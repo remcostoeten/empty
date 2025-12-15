@@ -7,4 +7,10 @@ export {
 } from "./schema";
 export { ingestBatch, type RemoteIngestOptions } from "./remote";
 export { deriveFingerprint, type FingerprintInput } from "./fingerprint";
-export { extractGeo, type GeoHeaders } from "./geo";
+export {
+  extractGeo,
+  createGeoResolver,
+  type GeoHeaders,
+  type GeoProvider,
+  type GeoResolverOptions,
+} from "./geo";

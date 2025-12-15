@@ -7,18 +7,18 @@ const highlights = [
 
 export default function AboutPage() {
   return (
-    <div className="flex flex-col gap-4">
-      <section className="card">
-        <h1 className="text-2xl font-semibold text-white">About this sample</h1>
-        <p className="mt-2 text-slate-300">
+    <div className="app-main">
+      <section className="panel">
+        <div className="panel-title">About this sample</div>
+        <p className="panel-subtitle" style={{ marginTop: 6 }}>
           The goal is to showcase how the analytics package drops into a modern Next.js app with minimal setup.
           Fingerprints are derived server-side using request headers and a project secret, then passed to the
           client-only collector.
         </p>
       </section>
-      <section className="card">
-        <h2 className="text-xl font-semibold text-white">Highlights</h2>
-        <ul className="mt-2 list-disc space-y-2 pl-6 text-slate-300">
+      <section className="panel">
+        <div className="panel-title">Highlights</div>
+        <ul className="subtle" style={{ marginTop: 8, paddingLeft: 18, lineHeight: 1.6 }}>
           {highlights.map((item) => (
             <li key={item}>{item}</li>
           ))}

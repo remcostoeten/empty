@@ -23,28 +23,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className="bg-slate-950 text-slate-100">
+      <body className="app-body">
         <ClientAnalytics action={persistPageViews} fingerprint={fingerprint} />
-        <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-10">
-          <header className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-900 px-5 py-3 shadow-lg shadow-slate-900/40">
-            <div className="text-lg font-semibold tracking-tight">Analytics demo</div>
-            <nav className="flex gap-4 text-sm text-slate-200">
-              <Link className="hover:text-white" href="/">
-                Home
-              </Link>
-              <Link className="hover:text-white" href="/product">
-                Product
-              </Link>
-              <Link className="hover:text-white" href="/docs">
-                Docs
-              </Link>
-              <Link className="hover:text-white" href="/about">
-                About
-              </Link>
+        <div className="page-shell">
+          <header className="app-header">
+            <div className="brand">
+              <span className="pill live">Live</span>
+              <div>
+                <div className="brand-title">Pulse analytics</div>
+                <div className="brand-subtitle">Self-hosted Vercel-style analytics</div>
+              </div>
+            </div>
+            <nav className="app-nav">
+              <Link href="/">Home</Link>
+              <Link href="/analytics">Analytics</Link>
+              <Link href="/members">Members</Link>
+              <Link href="/product">Modes</Link>
+              <Link href="/docs">Docs</Link>
+              <Link href="/about">About</Link>
             </nav>
           </header>
-          <main className="flex-1">{children}</main>
-          <footer className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-3 text-sm text-slate-300">
+          <main className="app-main">{children}</main>
+          <footer className="app-footer">
             Page views are persisted locally via Server Actions + SQLite using the self-hosted analytics packages.
           </footer>
         </div>

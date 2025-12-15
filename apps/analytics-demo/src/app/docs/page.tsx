@@ -16,19 +16,19 @@ const items = [
 
 export default function DocsPage() {
   return (
-    <div className="flex flex-col gap-4">
-      <section className="card">
-        <h1 className="text-2xl font-semibold text-white">How it works</h1>
-        <p className="mt-2 text-slate-300">
+    <div className="app-main">
+      <section className="panel">
+        <div className="panel-title">How it works</div>
+        <p className="panel-subtitle" style={{ marginTop: 6 }}>
           The client component is lightweight and safe for edge/runtime streaming. Server Actions own persistence so
           data never leaves your project unless you opt into remote mode.
         </p>
       </section>
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="list-stack">
         {items.map((item) => (
-          <div key={item.title} className="card">
-            <div className="text-lg font-semibold text-white">{item.title}</div>
-            <p className="mt-1 text-slate-300">{item.detail}</p>
+          <div key={item.title} className="list-card">
+            <div className="panel-title">{item.title}</div>
+            <p className="subtle" style={{ marginTop: 6 }}>{item.detail}</p>
           </div>
         ))}
       </section>
