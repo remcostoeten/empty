@@ -1,0 +1,18 @@
+{
+  "name": "@selfhosted/analytics-adapters",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "echo 'lint not configured'",
+    "test": "echo 'no tests'"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.31.2"
+  },
+  "peerDependencies": {
+    "@selfhosted/analytics-core": "0.1.0"
+  }
+}
