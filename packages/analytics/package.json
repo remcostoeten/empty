@@ -10,8 +10,8 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
-    "@remcostuten/analytics-core": "workspace:*",
-    "@remcostuten/analytics-adapters": "workspace:*"
+    "@remcostuten/analytics-core": "1.0.0",
+    "@remcostuten/analytics-adapters": "1.0.0"
   },
   "peerDependencies": {
     "react": ">=19.0.0",

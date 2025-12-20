@@ -15,7 +15,7 @@ This repository contains a reusable, privacy-first analytics stack inspired by `
 ### Install the single package
 
 ```bash
-npm install @remcostuten/analytics drizzle-orm
+bun add @remcostuten/analytics drizzle-orm
 ```
 
 ### Minimal usage (remote mode)
@@ -86,8 +86,9 @@ Server Action to write page views into `data/analytics.db` via Drizzle and the p
 
 ```bash
 # from repo root
-npm install
-npm run dev --workspace analytics-demo
+cp .env.example .env
+bun install
+bun dev
 
 # navigate to http://localhost:3000 and click through the routes
 # inspect the captured events
@@ -156,12 +157,23 @@ Optional geo lookup and rate-limit smoothing:
 - The service also includes ipapi and ipwho.is as keyless fallbacks and rotates through configured providers every few requests (`GEO_ROTATE_EVERY`, default 6).
 - Raw IPs are only used transiently for lookup; the resolver returns coarse geo and discards the address.
 
+### Environment template
+
+Copy `.env.example` to `.env` to provide demo defaults:
+
+```
+ANALYTICS_SECRET=demo-secret
+ANALYTICS_FINGERPRINT_SECRET=demo-secret
+IPINFO_TOKENS=
+PORT=8788
+```
+
 Run locally after installing dependencies:
 
 ```bash
-npm install
-npm run --workspace apps/analytics-service build
-npm run --workspace apps/analytics-service start
+bun install
+bun run --filter analytics-service build
+bun run --filter analytics-service start
 ```
 
 ## Feature status at a glance

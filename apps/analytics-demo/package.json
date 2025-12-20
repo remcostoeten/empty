@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@remcostuten/analytics": "workspace:*",
+    "@remcostuten/analytics": "1.0.0",
     "better-sqlite3": "^11.5.0",
     "drizzle-orm": "^0.31.4",
     "next": "^15.0.0",
