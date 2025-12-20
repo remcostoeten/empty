@@ -1,0 +1,20 @@
+{
+  "name": "selfhosted-analytics",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter analytics-demo dev",
+    "dev:service": "bun run --filter analytics-service start",
+    "build": "bun run build -ws",
+    "lint": "bun run lint -ws",
+    "test": "bun run test -ws"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "packageManager": "bun@1.2.22"
+}

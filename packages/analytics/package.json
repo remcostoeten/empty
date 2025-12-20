@@ -1,0 +1,21 @@
+{
+  "name": "@remcostuten/analytics",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "echo 'lint not configured'",
+    "test": "echo 'no tests'"
+  },
+  "dependencies": {
+    "@remcostuten/analytics-core": "1.0.0",
+    "@remcostuten/analytics-adapters": "1.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "next": ">=15.0.0",
+    "drizzle-orm": "^0.31.2"
+  }
+}
