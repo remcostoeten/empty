@@ -1,7 +1,6 @@
 "use server";
 
-import { createLocalWriter, extractGeo } from "@selfhosted/analytics-adapters";
-import { AnalyticsEvent } from "@selfhosted/analytics-core";
+import { createLocalWriter, extractGeo, AnalyticsEvent } from "@remcostuten/analytics";
 import { headers } from "next/headers";
 import { db, pageViewsTable } from "@/db/client";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@remcostuten/analytics-core",
+  "name": "@remcostuten/analytics",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
@@ -10,10 +10,12 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
-    "nanoid": "^5.0.7"
+    "@remcostuten/analytics-core": "workspace:*",
+    "@remcostuten/analytics-adapters": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=19.0.0",
-    "next": ">=15.0.0"
+    "next": ">=15.0.0",
+    "drizzle-orm": "^0.31.2"
   }
 }

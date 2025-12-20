@@ -1,4 +1,4 @@
-import { AnalyticsEvent } from "@selfhosted/analytics-core";
+import { AnalyticsEvent } from "@remcostuten/analytics-core";
 
 export interface RemoteIngestOptions {
   endpoint: string;

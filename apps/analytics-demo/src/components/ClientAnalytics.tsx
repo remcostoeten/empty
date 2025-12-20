@@ -1,7 +1,6 @@
 "use client";
 
-import { Analytics } from "@selfhosted/analytics-core";
-import { AnalyticsEvent } from "@selfhosted/analytics-core";
+import { Analytics, AnalyticsEvent } from "@remcostuten/analytics";
 
 interface ClientAnalyticsProps {
   action: (events: AnalyticsEvent[]) => Promise<void> | void;

@@ -11,7 +11,7 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
-    "@selfhosted/analytics-adapters": "^0.1.0",
+    "@remcostuten/analytics-adapters": "workspace:*",
     "@hono/node-server": "^1.13.3",
     "better-sqlite3": "^9.4.0",
     "drizzle-orm": "^0.31.2",

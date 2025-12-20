@@ -1,6 +1,6 @@
 {
-  "name": "@selfhosted/analytics-adapters",
-  "version": "0.1.0",
+  "name": "@remcostuten/analytics-adapters",
+  "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,6 +13,6 @@
     "drizzle-orm": "^0.31.2"
   },
   "peerDependencies": {
-    "@selfhosted/analytics-core": "0.1.0"
+    "@remcostuten/analytics-core": "1.0.0"
   }
 }

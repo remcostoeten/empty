@@ -7,7 +7,7 @@ import {
   extractGeo,
   createGeoResolver,
   pageViewsSqlite,
-} from "@selfhosted/analytics-adapters";
+} from "@remcostuten/analytics-adapters";
 import { nanoid } from "nanoid";
 
 const database = new Database("analytics.db");

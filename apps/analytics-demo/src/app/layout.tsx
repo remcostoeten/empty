@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import "./globals.css";
-import { deriveFingerprint } from "@selfhosted/analytics-adapters";
+import { deriveFingerprint } from "@remcostuten/analytics";
 import { ClientAnalytics } from "@/components/ClientAnalytics";
 import { persistPageViews } from "@/app/actions/persist-analytics";
 

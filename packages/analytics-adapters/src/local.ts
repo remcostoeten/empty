@@ -1,5 +1,5 @@
 "use server";
-import { AnalyticsEvent } from "@selfhosted/analytics-core";
+import { AnalyticsEvent } from "@remcostuten/analytics-core";
 import { nanoid } from "nanoid";
 import { InferModel, Table } from "drizzle-orm";
 

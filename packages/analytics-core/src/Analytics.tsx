@@ -24,6 +24,15 @@ function getScreenBucket(): string | undefined {
   return "xl";
 }
 
+function getPathname(): string {
+  if (typeof window === "undefined") return "/";
+  try {
+    return window.location.pathname || "/";
+  } catch {
+    return "/";
+  }
+}
+
 function buildEvent(
   pathname: string,
   visitId: string,
@@ -47,6 +56,40 @@ function buildEvent(
   };
 }
 
+function attachNavigationListener(onChange: (pathname: string) => void) {
+  if (typeof window === "undefined") return () => {};
+
+  const history = window.history;
+  const originalPush = history.pushState.bind(history);
+  const originalReplace = history.replaceState.bind(history);
+
+  const emit = () => onChange(getPathname());
+
+  history.pushState = ((...args: Parameters<History["pushState"]>) => {
+    const result = originalPush(...args);
+    window.dispatchEvent(new Event("analytics:history-change"));
+    return result;
+  }) as History["pushState"];
+
+  history.replaceState = ((...args: Parameters<History["replaceState"]>) => {
+    const result = originalReplace(...args);
+    window.dispatchEvent(new Event("analytics:history-change"));
+    return result;
+  }) as History["replaceState"];
+
+  window.addEventListener("popstate", emit);
+  window.addEventListener("hashchange", emit);
+  window.addEventListener("analytics:history-change", emit);
+
+  return () => {
+    history.pushState = originalPush;
+    history.replaceState = originalReplace;
+    window.removeEventListener("popstate", emit);
+    window.removeEventListener("hashchange", emit);
+    window.removeEventListener("analytics:history-change", emit);
+  };
+}
+
 export function Analytics(props: AnalyticsProps) {
   const visitId = useMemo(() => getVisitId(), []);
   const projectScope = useMemo(() => {
@@ -64,33 +107,30 @@ export function Analytics(props: AnalyticsProps) {
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+    const pathname = getPathname();
     lastPathRef.current = pathname;
     batcher.push(buildEvent(pathname, visitId, "initial", fingerprint));
 
     const handleVisibility = () => {
-      const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
+      const currentPath = getPathname();
       batcher.push(buildEvent(currentPath, visitId, "visibility_flush", fingerprint));
       batcher.flush();
     };
 
-    const handleNavigation = () => {
-      const newPath = typeof window !== "undefined" ? window.location.pathname : "/";
+    const detachNavigation = attachNavigationListener((newPath) => {
       if (lastPathRef.current === newPath) return;
       lastPathRef.current = newPath;
       batcher.push(buildEvent(newPath, visitId, "route_change", fingerprint));
-    };
+    });
 
     document.addEventListener("visibilitychange", handleVisibility);
-    window.addEventListener("popstate", handleNavigation);
-    window.addEventListener("hashchange", handleNavigation);
     window.addEventListener("pagehide", handleVisibility);
 
     return () => {
+      detachNavigation();
       document.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("popstate", handleNavigation);
-      window.removeEventListener("hashchange", handleNavigation);
       window.removeEventListener("pagehide", handleVisibility);
+      batcher.flush();
       batcher.stop();
     };
   }, [batcher, fingerprint, visitId]);
